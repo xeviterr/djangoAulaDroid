@@ -144,12 +144,8 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
             if (b.getId()==R.id.btnEnviar) {
                 //Caldrà comprovar que totes les dades estiguin marcades.
                 String json = "{" +
-                        "                    \"model\": \"presencia.controlassistencia\", " +
                         "                    \"pk\": \"%s\"," +
-                        "                    \"fields\":" +
-                        "                    {" +
-                        "                        \"estat\": \"%s\"\n" +
-                        "                    }" +
+                        "                    \"estat\": \"%s\"\n" +
                         "                    }";
                 String jSonAEnviar = "";
                 for (AssistenciaView assistencia : vistesAssistencia) {

@@ -35,7 +35,8 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
 
     HttpPersistentConnection conn = new HttpPersistentConnection();
     PresenciaWebService pws = null;
-    Date dataAVisualitzar = new GregorianCalendar(2018, Calendar.DECEMBER, 31).getTime();
+    //Date dataAVisualitzar = new GregorianCalendar(2018, Calendar.DECEMBER, 31).getTime();
+    Date dataAVisualitzar = new GregorianCalendar().getTime();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
