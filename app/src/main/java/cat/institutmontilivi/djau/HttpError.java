@@ -1,4 +1,4 @@
-package com.example.djau;
+package cat.institutmontilivi.djau;
 
 public class HttpError {
     private String msg;

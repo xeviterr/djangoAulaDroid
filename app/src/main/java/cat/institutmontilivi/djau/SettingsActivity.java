@@ -1,7 +1,8 @@
-package com.example.djau;
+package cat.institutmontilivi.djau;
 
 import android.preference.PreferenceActivity;
 import android.os.Bundle;
+
 
 public class SettingsActivity extends PreferenceActivity {
 

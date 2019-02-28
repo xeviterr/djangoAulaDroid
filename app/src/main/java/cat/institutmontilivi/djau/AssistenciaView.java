@@ -1,4 +1,4 @@
-package com.example.djau;
+package cat.institutmontilivi.djau;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -6,8 +6,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
-
-import java.util.ArrayList;
 import java.util.Map;
 
 /**

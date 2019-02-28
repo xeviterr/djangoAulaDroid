@@ -1,4 +1,4 @@
-package com.example.djau;
+package cat.institutmontilivi.djau;
 
 import java.io.IOException;
 import java.io.Serializable;
