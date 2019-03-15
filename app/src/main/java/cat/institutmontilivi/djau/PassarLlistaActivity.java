@@ -66,7 +66,7 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
             if (error)
             {
                 Toast toast = Toast.makeText(getApplicationContext(),
-                        errorData.getMsg(),
+                        errorData.toString(),
                         Toast.LENGTH_SHORT);
                 toast.show();
             }
@@ -102,8 +102,8 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
                         vistesAssistencia.add(assistenciaView);
 
                         View linia = new View(this);
-                        linia.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 1));
-                        linia.setBackgroundColor(Color.parseColor("#FFFFFF"));
+                        linia.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
+                        linia.setBackgroundColor(Color.parseColor("#000000"));
 
                         ll.addView(titleView);
                         ll.addView(assistenciaView);

@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -28,7 +27,6 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 public class HttpPersistentConnection implements Serializable {
@@ -138,14 +136,14 @@ public class HttpPersistentConnection implements Serializable {
     }
 
     public String sendJSONArray(JSONArray arr, String urlString, String method) throws Exception {
-        return sendJSONData(arr.toString(), urlString, method);
+        return sendData(arr.toString(), urlString, method);
     }
 
     public String sendJSONObject(JSONObject obj, String urlString, String method) throws Exception {
-        return sendJSONData(obj.toString(), urlString, method);
+        return sendData(obj.toString(), urlString, method);
     }
 
-    public String sendJSONData(String data, String urlString, String method) throws HttpErrorException, IOException {
+    public String sendData(String data, String urlString, String method) throws HttpErrorException, IOException {
         HttpURLConnection connection = null;
         try {
             connection = obrirConnexioHTTPoHTTPS(urlString);

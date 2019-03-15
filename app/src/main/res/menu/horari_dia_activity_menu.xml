@@ -2,6 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/configuracio"
         android:title="@string/configuracio" />
+    <item android:id="@+id/reconnectar"
+        android:title="reconnectar" />
     <item android:id="@+id/seguentDia"
         android:title="Dia Següent" />
     <item android:id="@+id/anteriorDia"

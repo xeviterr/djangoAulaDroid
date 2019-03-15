@@ -40,6 +40,11 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_horari_dia);
 
+        doLogin();
+    }
+
+    protected void doLogin()
+    {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         pws = new PresenciaWebService(
                 conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
@@ -61,6 +66,10 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
             case R.id.configuracio:
                 Log.e("DEBUG", "click a configuració");
                 startActivity(new Intent(this, SettingsActivity.class ));
+                return true;
+            case R.id.reconnectar:
+                Log.e("DEBUG", "click a reconnectar");
+                doLogin();
                 return true;
             case R.id.anteriorDia:
                 Log.e("DEBUG", "click a dia anterior");
@@ -171,9 +180,14 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         try {
             if (error)
             {
+                String msg = "";
+                if (callerID == PresenciaWebService.CALLER_doLogin)
+                    msg = "No s'ha pogut fer login, canvia la configuració i intenta reconnectar";
+                else
+                    msg = errorMsg.toString();
                 Toast toast = Toast.makeText(getApplicationContext(),
-                        errorMsg.getMsg(),
-                        Toast.LENGTH_SHORT);
+                        msg,
+                        Toast.LENGTH_LONG);
                 toast.show();
             }
             else {

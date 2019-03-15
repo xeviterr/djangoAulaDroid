@@ -15,4 +15,5 @@ public class HttpError {
     public String getMsg() {
         return this.msg;
     }
+    public String toString() { return this.errorCode + ":" + this.msg; }
 }
