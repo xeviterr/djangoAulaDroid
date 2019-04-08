@@ -36,16 +36,18 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
     HttpPersistentConnection conn = new HttpPersistentConnection();
     PresenciaWebService pws = null;
     Date dataAVisualitzar = new GregorianCalendar(2018, Calendar.DECEMBER, 31).getTime();
+    SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_horari_dia);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
         pws = new PresenciaWebService(
                 conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
-        pws.doLogin(this, prefs.getString("password", ""));
+
+        pws.getAPILevel(this);
     }
 
     @Override
@@ -179,6 +181,11 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
                 toast.show();
             }
             else {
+                if (callerID == PresenciaWebService.CALLER_getAPILevel) {
+                    if (!data.equals(Configuration.getInstance().APILevel))
+                        throw new Exception("La versió de la API no coincideix, actualitza la teva aplicació Android a la última versió.");
+                    pws.doLogin(this, prefs.getString("password", ""));
+                }
                 if (callerID == PresenciaWebService.CALLER_doLogin) {
 
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -196,6 +203,7 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         } catch (Exception e) {
             e.printStackTrace();
             Log.e("ERR", data);
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -6,4 +6,5 @@
     <EditTextPreference android:key="server_url" android:title="URL WebService" android:defaultValue="http://myserver.com:8000/"></EditTextPreference>
     <EditTextPreference android:key="username" android:title="Nom usuari"></EditTextPreference>
     <EditTextPreference android:key="password" android:title="Password" android:inputType="textPassword"></EditTextPreference>
+
 </PreferenceScreen>

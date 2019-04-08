@@ -15,6 +15,7 @@ public class PresenciaWebService {
     public static final String CALLER_getProfes = "getProfes";
     public static final String CALLER_getFrangesHoraries = "getFrangesHoraries";
     public static final String CALLER_putGuardia = "putGuardia";
+    public static final String CALLER_getAPILevel = "putGuardia";
 
     public interface ICallBackaActivityGetString{
         public void returnData(String callerID, String data, boolean error, HttpError detallsError);
@@ -84,6 +85,12 @@ public class PresenciaWebService {
         executaEnBackground(activitatQueCrida, CALLER_getFrangesHoraries, urlCrida);
     }
 
+    public void getAPILevel(final ICallBackaActivityGetString activitatQueCrida)
+    {
+        String urlCrida = url + "/getAPILevel/";
+        executaEnBackground(activitatQueCrida, CALLER_getAPILevel, urlCrida);
+    }
+
     public void putGuardia(final ICallBackaActivityGetString activitatQueCrida, final String idUsuariASubstituir, final String idUsuari, final String idFranja, final Date diaAImpartir)
     {
         String urlCrida = url + "/putGuardia/" + username + "/";
@@ -131,7 +138,7 @@ public class PresenciaWebService {
                 activitatQueCrida.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        activitatQueCrida.returnData(CALLER_putControlAssistencia, data, error, new HttpError(errorCode, errorMsg));
+                        activitatQueCrida.returnData(CALLER_putControlAssistencia, data, error, new HttpError(errorMsg, errorCode));
                     }
                 });
             }
