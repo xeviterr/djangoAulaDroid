@@ -1,29 +1,23 @@
-package com.example.djau;
+package cat.institutmontilivi.djau;
 
 import android.app.Activity;
-import android.app.Application;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class PassarLlistaActivity extends Activity implements PresenciaWebService.ICallBackaActivityGetString, AssistenciaView.OnStateChangeListener, View.OnClickListener
@@ -72,7 +66,7 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
             if (error)
             {
                 Toast toast = Toast.makeText(getApplicationContext(),
-                        errorData.getMsg(),
+                        errorData.toString(),
                         Toast.LENGTH_SHORT);
                 toast.show();
             }
@@ -108,8 +102,8 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
                         vistesAssistencia.add(assistenciaView);
 
                         View linia = new View(this);
-                        linia.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 1));
-                        linia.setBackgroundColor(Color.parseColor("#FFFFFF"));
+                        linia.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
+                        linia.setBackgroundColor(Color.parseColor("#000000"));
 
                         ll.addView(titleView);
                         ll.addView(assistenciaView);

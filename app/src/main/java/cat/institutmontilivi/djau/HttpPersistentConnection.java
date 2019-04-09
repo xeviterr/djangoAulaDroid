@@ -1,4 +1,4 @@
-package com.example.djau;
+package cat.institutmontilivi.djau;
 
 import android.os.Build;
 import android.text.TextUtils;
@@ -15,11 +15,19 @@ import java.io.Serializable;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 public class HttpPersistentConnection implements Serializable {
     /**
@@ -27,8 +35,8 @@ public class HttpPersistentConnection implements Serializable {
      */
     public static int CONN_TIMEOUT = 5000;
     public static int READ_TIMEOUT = 6000;
-
     public static String METHOD_POST = "POST";
+    public static final boolean API_DEBUG = true; //Accepta qualsevol HTTP, perillós.
 
     SerializableCookieManager msCookieManager = new SerializableCookieManager();
 
@@ -53,15 +61,14 @@ public class HttpPersistentConnection implements Serializable {
         }
     }
 
-    public String requestWebService(String serviceUrl) throws HttpErrorException, IOException {
+    public String requestWebService(String serviceUrl) throws HttpErrorException, IOException, NoSuchAlgorithmException {
         disableConnectionReuseIfNecessary();
 
         HttpURLConnection urlConnection = null;
         try {
             // create connection
             Log.e("ERROR", "WebService URL:" + serviceUrl);
-            URL urlToRequest = new URL(serviceUrl);
-            urlConnection = (HttpURLConnection) urlToRequest.openConnection();
+            urlConnection = obrirConnexioHTTPoHTTPS(serviceUrl);
             //urlConnection.setRequestProperty("Authorization", Constants.BASIC_AUTH);
             urlConnection.setConnectTimeout(CONN_TIMEOUT);
             urlConnection.setReadTimeout(READ_TIMEOUT);
@@ -79,6 +86,22 @@ public class HttpPersistentConnection implements Serializable {
             String msg = e.toString() + response;
             Log.e("ERROR", msg);
             throw new HttpErrorException(response, String.valueOf(urlConnection.getResponseCode()), e);
+        }
+    }
+
+    public HttpURLConnection obrirConnexioHTTPoHTTPS(String serviceUrl) throws IOException {
+        URL urlToRequest = new URL(serviceUrl);
+        if (serviceUrl.contains("https://")) {
+            if (API_DEBUG)
+                trustAllHosts();
+            HttpsURLConnection conn = (HttpsURLConnection) urlToRequest.openConnection();
+            if (API_DEBUG)
+                conn.setHostnameVerifier(DO_NOT_VERIFY);
+            return conn;
+        }
+        else
+        {
+            return (HttpURLConnection) urlToRequest.openConnection();
         }
     }
 
@@ -113,18 +136,17 @@ public class HttpPersistentConnection implements Serializable {
     }
 
     public String sendJSONArray(JSONArray arr, String urlString, String method) throws Exception {
-        return sendJSONData(arr.toString(), urlString, method);
+        return sendData(arr.toString(), urlString, method);
     }
 
     public String sendJSONObject(JSONObject obj, String urlString, String method) throws Exception {
-        return sendJSONData(obj.toString(), urlString, method);
+        return sendData(obj.toString(), urlString, method);
     }
 
-    public String sendJSONData(String data, String urlString, String method) throws HttpErrorException, IOException {
+    public String sendData(String data, String urlString, String method) throws HttpErrorException, IOException {
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(urlString);
-            connection = (HttpURLConnection) url.openConnection();
+            connection = obrirConnexioHTTPoHTTPS(urlString);
             connection.setRequestMethod(method);
             connection.setDoOutput(true);
             setCookiesToConnection(connection);
@@ -183,6 +205,43 @@ public class HttpPersistentConnection implements Serializable {
         // very nice trick from
         // http://weblogs.java.net/blog/pat/archive/2004/10/stupid_scanner_1.html
         return new Scanner(inStream).useDelimiter("\\A").next();
+    }
+
+    // always verify the host - dont check for certificate
+    final static HostnameVerifier DO_NOT_VERIFY = new HostnameVerifier() {
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
+        }
+    };
+
+    /**
+     * Trust every server - dont check for any certificate
+     */
+    private static void trustAllHosts() {
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return new java.security.cert.X509Certificate[] {};
+            }
+
+            public void checkClientTrusted(X509Certificate[] chain,
+                                           String authType) throws CertificateException {
+            }
+
+            public void checkServerTrusted(X509Certificate[] chain,
+                                           String authType) throws CertificateException {
+            }
+        } };
+
+        // Install the all-trusting trust manager
+        try {
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection
+                    .setDefaultSSLSocketFactory(sc.getSocketFactory());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

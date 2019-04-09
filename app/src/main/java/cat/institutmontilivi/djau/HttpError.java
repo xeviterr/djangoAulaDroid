@@ -1,4 +1,4 @@
-package com.example.djau;
+package cat.institutmontilivi.djau;
 
 public class HttpError {
     private String msg;
@@ -15,4 +15,5 @@ public class HttpError {
     public String getMsg() {
         return this.msg;
     }
+    public String toString() { return this.errorCode + ":" + this.msg; }
 }

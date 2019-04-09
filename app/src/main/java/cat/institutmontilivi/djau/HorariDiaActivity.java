@@ -1,15 +1,11 @@
-package com.example.djau;
+package cat.institutmontilivi.djau;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Canvas;
-import android.graphics.ColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 import android.view.Menu;
@@ -21,12 +17,13 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import cat.institutmontilivi.djau.R;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -35,15 +32,20 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
 
     HttpPersistentConnection conn = new HttpPersistentConnection();
     PresenciaWebService pws = null;
-    Date dataAVisualitzar = new GregorianCalendar(2018, Calendar.DECEMBER, 31).getTime();
-    SharedPreferences prefs;
+    //Date dataAVisualitzar = new GregorianCalendar(2018, Calendar.DECEMBER, 31).getTime();
+    Date dataAVisualitzar = new GregorianCalendar().getTime();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_horari_dia);
 
-        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        doLogin();
+    }
+
+    protected void doLogin()
+    {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         pws = new PresenciaWebService(
                 conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
 
@@ -64,7 +66,11 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         switch (item.getItemId()) {
             case R.id.configuracio:
                 Log.e("DEBUG", "click a configuració");
-                startActivity(new Intent(this, com.example.djau.SettingsActivity.class ));
+                startActivity(new Intent(this, SettingsActivity.class ));
+                return true;
+            case R.id.reconnectar:
+                Log.e("DEBUG", "click a reconnectar");
+                doLogin();
                 return true;
             case R.id.anteriorDia:
                 Log.e("DEBUG", "click a dia anterior");
@@ -151,7 +157,7 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         if (v.getTag()=="novaGuardia")
         {
             //Botó nova guàrdia. Seleccionarem usuari i una hora.
-            Intent intent = new Intent(this, com.example.djau.GuardiaActivity.class);
+            Intent intent = new Intent(this, GuardiaActivity.class);
             intent.putExtra("CONN", this.conn);
             intent.putExtra("DATA_A_VISUALITZAR", this.dataAVisualitzar);
             startActivityForResult(intent, CODI_ACTIVITAT_GUARDIA);
@@ -162,7 +168,7 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
             Log.e("ERROR", "Log error." + boto.getTag());
 
             //Connexió
-            Intent intent = new Intent(this, com.example.djau.PassarLlistaActivity.class);
+            Intent intent = new Intent(this, PassarLlistaActivity.class);
             intent.putExtra("CONN", this.conn);
             intent.putExtra("PKIMPARTIR", (String) boto.getTag());
             startActivity(intent);
@@ -175,15 +181,22 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         try {
             if (error)
             {
+                String msg = "";
+                if (callerID == PresenciaWebService.CALLER_doLogin)
+                    msg = "No s'ha pogut fer login, canvia la configuració i intenta reconnectar";
+                else
+                    msg = errorMsg.toString();
                 Toast toast = Toast.makeText(getApplicationContext(),
-                        errorMsg.getMsg(),
-                        Toast.LENGTH_SHORT);
+                        msg,
+                        Toast.LENGTH_LONG);
                 toast.show();
             }
             else {
                 if (callerID == PresenciaWebService.CALLER_getAPILevel) {
-                    if (!data.equals(Configuration.getInstance().APILevel))
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                    if (!data.equals(prefs.getString("API_LEVEL","")))
                         throw new Exception("La versió de la API no coincideix, actualitza la teva aplicació Android a la última versió.");
+
                     pws.doLogin(this, prefs.getString("password", ""));
                 }
                 if (callerID == PresenciaWebService.CALLER_doLogin) {
@@ -203,7 +216,11 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         } catch (Exception e) {
             e.printStackTrace();
             Log.e("ERR", data);
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            try {
+                loadControls(new JSONArray());
+            } catch (JSONException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 

@@ -1,7 +1,6 @@
-package com.example.djau;
+package cat.institutmontilivi.djau;
 
-import android.widget.Toast;
-
+import java.net.URLEncoder;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
@@ -38,11 +37,27 @@ public class PresenciaWebService {
             @Override
             public void run() {
                 try {
-                    String data = con.requestData(url + "/login/" + username);
-                    activitatQueCrida.returnData(CALLER_doLogin, data, false, null );
-                } catch (HttpErrorException e) {
+                    StringBuilder result = new StringBuilder();
+                    result.append("idusuari=" + username);
+                    result.append("&");
+                    result.append("password=" + password);
+
+                    final String data = con.sendData(result.toString(),url + "/login/", "POST");
+
+                    activitatQueCrida.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            activitatQueCrida.returnData(CALLER_doLogin, data, false, null );
+                        }
+                    });
+                } catch (final HttpErrorException e) {
                     e.printStackTrace();
-                    activitatQueCrida.returnData(CALLER_doLogin,"", true, new HttpError(e.getErrorCode(), e.getMessage()));
+                    activitatQueCrida.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            activitatQueCrida.returnData(CALLER_doLogin,"", true, new HttpError(e.getErrorCode(), e.getMessage()));
+                        }
+                    });
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -114,23 +129,21 @@ public class PresenciaWebService {
         new Thread(new Runnable() {
             String data="";
             boolean error = false;
-            String errorMsg = "";
-            String errorCode = "0";
+            HttpError errorObj = null;
             @Override
             public void run() {
                 try {
-                    data = con.sendJSONData(dadesJSON, url, "PUT");
+                    data = con.sendData(dadesJSON, url, "PUT");
                 }
                 catch (HttpErrorException e)
                 {
                     error=true;
-                    errorMsg=e.getMessage();
-                    errorCode=e.getErrorCode();
+                    errorObj = new HttpError(e.getMessage(), e.getErrorCode());
                     e.printStackTrace();
                 }
                 catch (Exception e) {
                     error = true;
-                    errorMsg = e.getMessage();
+                    errorObj = new HttpError(e.getMessage(), "0");
                     e.printStackTrace();
                 }
 
@@ -138,7 +151,7 @@ public class PresenciaWebService {
                 activitatQueCrida.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        activitatQueCrida.returnData(CALLER_putControlAssistencia, data, error, new HttpError(errorMsg, errorCode));
+                        activitatQueCrida.returnData(CALLER_putControlAssistencia, data, error, errorObj);
                     }
                 });
             }
