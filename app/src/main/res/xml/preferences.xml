@@ -4,7 +4,7 @@
     android:key="first_preferencescreen" android:layout_height="match_parent" android:layout_width="match_parent">
 
     <EditTextPreference android:key="server_url" android:title="URL WebService"
-        android:defaultValue="https://10.0.2.2:8000/presenciaRest/"></EditTextPreference>
+        android:defaultValue="https://faltes.institutmontilivi.cat/presenciaRest/"></EditTextPreference>
     <EditTextPreference android:key="username" android:title="Nom usuari"></EditTextPreference>
     <EditTextPreference android:key="password" android:title="Password" android:inputType="textPassword"></EditTextPreference>
 </PreferenceScreen>
