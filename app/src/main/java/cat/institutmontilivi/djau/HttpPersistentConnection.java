@@ -33,12 +33,18 @@ public class HttpPersistentConnection implements Serializable {
     /**
      * Connexió que autentica l'usuari amb una cookie.
      */
-    public static int CONN_TIMEOUT = 5000;
-    public static int READ_TIMEOUT = 6000;
-    public static String METHOD_POST = "POST";
-    public static final boolean API_DEBUG = true; //Accepta qualsevol HTTP, perillós.
+    public int CONN_TIMEOUT = 10000;
+    public int READ_TIMEOUT = 10000;
+    public String METHOD_POST = "POST";
+    public boolean API_DEBUG = true; //Accepta qualsevol HTTP, perillós.
 
     SerializableCookieManager msCookieManager = new SerializableCookieManager();
+
+    public HttpPersistentConnection()
+    {
+        //Obtenir si és DEBUG de la configuració de l'Aplicació.
+        this.API_DEBUG = Configuration.getInstance().APIDebug;
+    }
 
     private void getAndSaveCookiesToManager(HttpURLConnection connection)
     {

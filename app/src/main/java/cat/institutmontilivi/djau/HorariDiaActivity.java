@@ -24,11 +24,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 public class HorariDiaActivity extends Activity implements View.OnClickListener, PresenciaWebService.ICallBackaActivityGetString {
     private static final int CODI_ACTIVITAT_GUARDIA = 1;
+    private static final int CODI_ACTIVITAT_PASSAR_LLISTA = 2;
 
     HttpPersistentConnection conn = new HttpPersistentConnection();
     PresenciaWebService pws = null;
@@ -39,7 +41,8 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_horari_dia);
-
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        setTitle(sdf.format(dataAVisualitzar));
         doLogin();
     }
 
@@ -48,7 +51,8 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         pws = new PresenciaWebService(
                 conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
-        pws.doLogin(this, prefs.getString("password", ""));
+
+        pws.getAPILevel(this);
     }
 
     @Override
@@ -104,18 +108,28 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
                     ViewGroup.LayoutParams.WRAP_CONTENT));
             b.setOnClickListener(this);
             b.setTag(impartir.getJSONObject("impartir").getString("pk"));
+            //Treure els dos últims zeros dels segons..
+            String horaInici = impartir.getJSONObject("horari").getJSONObject("fields").getString("hora_inici");
+            if (horaInici.length() > 5)
+                horaInici = horaInici.substring(0, 5);
+
             b.setText(impartir.getString("assignatura") + "\n" +
-                    impartir.getJSONObject("horari").getJSONObject("fields").getString("hora_inici"));
-            if (impartir.getJSONObject("impartir").getJSONObject("fields").getString("professor_guardia") != "null") {
-                Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_vermell, null);
-                b.setBackgroundDrawable(drw);
-                b.setText("G:" + b.getText());
-            }else
-            {
-                Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_verd, null);
+                    horaInici);
+            JSONObject campsImpartir = impartir.getJSONObject("impartir").getJSONObject("fields");
+            if (campsImpartir.getString("dia_passa_llista") == "null") {
+                Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_gris, null);
                 b.setBackgroundDrawable(drw);
             }
-                //b.setBackgroundColor(0x00FF0000);
+            else {
+                if (campsImpartir.getString("professor_guardia") != "null") {
+                    Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_vermell, null);
+                    b.setBackgroundDrawable(drw);
+                    b.setText("G:" + b.getText());
+                } else {
+                    Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_verd, null);
+                    b.setBackgroundDrawable(drw);
+                }
+            }
             mainLayout.addView(b);
         }
 
@@ -128,25 +142,6 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         b.setOnClickListener(this);
         b.setText("Passar guàrdia");
         mainLayout.addView(b);
-    }
-
-    private void test_loadControls() {
-        LinearLayout mainLayout = (LinearLayout) findViewById(R.id.mainLayout);
-        mainLayout.removeAllViews();
-
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
-
-        for (int i = 0; i < 3; i++) {
-            Button b = new Button(this);
-            String text = "PROVA \n11:00-12:00";
-            b.setLayoutParams(new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT));
-            b.setOnClickListener(this);
-            b.setTag(i);
-            b.setText(text);
-            mainLayout.addView(b);
-        }
     }
 
     @Override
@@ -170,7 +165,7 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
             Intent intent = new Intent(this, PassarLlistaActivity.class);
             intent.putExtra("CONN", this.conn);
             intent.putExtra("PKIMPARTIR", (String) boto.getTag());
-            startActivity(intent);
+            startActivityForResult(intent, CODI_ACTIVITAT_PASSAR_LLISTA);
         }
     }
 
@@ -191,6 +186,13 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
                 toast.show();
             }
             else {
+                if (callerID == PresenciaWebService.CALLER_getAPILevel) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                    if (!data.equals(Configuration.getInstance().APILevel))
+                        throw new Exception("La versió de la API no coincideix, actualitza la teva aplicació Android a la última versió.");
+
+                    pws.doLogin(this, prefs.getString("password", ""));
+                }
                 if (callerID == PresenciaWebService.CALLER_doLogin) {
 
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");

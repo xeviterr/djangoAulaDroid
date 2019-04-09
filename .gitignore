@@ -1,3 +1,19 @@
+<<<<<<< HEAD
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.idea
+=======
 # Built application files
 *.apk
 *.ap_
@@ -78,6 +94,10 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+<<<<<<< HEAD
 
 app/debug
 app/release
+=======
+>>>>>>> 4dbb527b8266fcb68da4a5069b7b6f01f9415f8e
+>>>>>>> 4e69b785161cf7b5d4c82db86889d4a46a455f27
