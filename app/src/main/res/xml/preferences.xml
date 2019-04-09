@@ -7,5 +7,4 @@
         android:defaultValue="https://10.0.2.2:8000/presenciaRest/"></EditTextPreference>
     <EditTextPreference android:key="username" android:title="Nom usuari"></EditTextPreference>
     <EditTextPreference android:key="password" android:title="Password" android:inputType="textPassword"></EditTextPreference>
-    <Preference android:key="API_LEVEL" android:defaultValue="1"></Preference>
 </PreferenceScreen>
