@@ -1,3 +1,8 @@
+- Posar més seguretat usar https://jwt.io/ fer que el token es passi per Authorization header.
+- Fer que els de mecànica puguin passar llista.
+- Perque surt l'error 404 amb tot el codi de Django (si no estas autenticat). (Seria útil que no passes)
+
+-------------------
 Passar plantillles.
 
 Icona de 512x512 png (32bits)
