@@ -3,9 +3,11 @@
     <item android:id="@+id/configuracio"
         android:title="Configuració" />
     <item android:id="@+id/reconnectar"
-        android:title="Reconnectar" />
+        android:title="Intenta reconnectar" />
     <item android:id="@+id/seguentDia"
         android:title="Dia Següent" />
     <item android:id="@+id/anteriorDia"
         android:title="Dia Anterior" />
+    <item android:id="@+id/saltarADia"
+        android:title="Anar al dia ..." />
 </menu>

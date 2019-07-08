@@ -4,6 +4,8 @@ import java.net.URLEncoder;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
+import cat.institutmontilivi.djau.Exceptions.UserNotFoundException;
+
 public class PresenciaWebService {
 
     public static final String CALLER_doLogin = "doLogin";
@@ -32,7 +34,14 @@ public class PresenciaWebService {
         this.username = username;
     }
 
-    public void doLogin(final ICallBackaActivityGetString activitatQueCrida, final String password) {
+    private void existeixUsuari() throws UserNotFoundException {
+        if (this.username.equals(""))
+            throw new UserNotFoundException("Ens cal configurar l'usuari per fer una petició web");
+    }
+
+    public void doLogin(final ICallBackaActivityGetString activitatQueCrida, final String password) throws UserNotFoundException {
+        existeixUsuari();
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -70,44 +79,44 @@ public class PresenciaWebService {
      * @param activitatQueCrida
      * @param dataImpartirYYYYMMDD Crida la data en aquest format: AAAA-MM-DD
      */
-    public void getImpartirPerData(final ICallBackaActivityGetString activitatQueCrida, final String dataImpartirYYYYMMDD)
-    {
+    public void getImpartirPerData(final ICallBackaActivityGetString activitatQueCrida, final String dataImpartirYYYYMMDD) throws UserNotFoundException {
+        existeixUsuari();
         String urlCrida = url + "/getImpartirPerData/" + dataImpartirYYYYMMDD +"/" + username;
         executaEnBackground(activitatQueCrida, CALLER_getImpartirPerData, urlCrida);
     }
 
-    public void getControlAssistencia(final ICallBackaActivityGetString activitatQueCrida, final String idImpartir)
-    {
+    public void getControlAssistencia(final ICallBackaActivityGetString activitatQueCrida, final String idImpartir) throws UserNotFoundException {
+        existeixUsuari();
         String urlCrida = url + "/getControlAssistencia/" + idImpartir +"/" + username;
         executaEnBackground(activitatQueCrida, CALLER_getControlAssistencia, urlCrida);
     }
 
-    public void getEstatControlAssistencia(final ICallBackaActivityGetString activitatQueCrida)
-    {
+    public void getEstatControlAssistencia(final ICallBackaActivityGetString activitatQueCrida) throws UserNotFoundException {
+        existeixUsuari();
         String urlCrida = url + "/getEstatControlAssistencia/" + username;
         executaEnBackground(activitatQueCrida, CALLER_getEstatControlAssistencia, urlCrida);
     }
 
-    public void getProfes(final ICallBackaActivityGetString activitatQueCrida)
-    {
+    public void getProfes(final ICallBackaActivityGetString activitatQueCrida) throws UserNotFoundException {
+        existeixUsuari();
         String urlCrida = url + "/getProfes/" + username;
         executaEnBackground(activitatQueCrida, CALLER_getProfes, urlCrida);
     }
 
-    public void getFrangesHoraries(final ICallBackaActivityGetString activitatQueCrida)
-    {
+    public void getFrangesHoraries(final ICallBackaActivityGetString activitatQueCrida) throws UserNotFoundException {
+        existeixUsuari();
         String urlCrida = url + "/getFrangesHoraries/" + username;
         executaEnBackground(activitatQueCrida, CALLER_getFrangesHoraries, urlCrida);
     }
 
-    public void getAPILevel(final ICallBackaActivityGetString activitatQueCrida)
-    {
+    public void getAPILevel(final ICallBackaActivityGetString activitatQueCrida) throws UserNotFoundException {
+        existeixUsuari();
         String urlCrida = url + "/getAPILevel/";
         executaEnBackground(activitatQueCrida, CALLER_getAPILevel, urlCrida);
     }
 
-    public void putGuardia(final ICallBackaActivityGetString activitatQueCrida, final String idUsuariASubstituir, final String idUsuari, final String idFranja, final Date diaAImpartir)
-    {
+    public void putGuardia(final ICallBackaActivityGetString activitatQueCrida, final String idUsuariASubstituir, final String idUsuari, final String idFranja, final Date diaAImpartir) throws UserNotFoundException {
+        existeixUsuari();
         String urlCrida = url + "/putGuardia/" + username + "/";
         String dadesJSON = "{\"idUsuariASubstituir\":\"%s\", " +
             "\"idUsuari\":\"%s\"," +
@@ -118,8 +127,8 @@ public class PresenciaWebService {
 
     }
 
-    public void putControlAssistencia(final ICallBackaActivityGetString activitatQueCrida, final String idImpartir, final String dadesJSON)
-    {
+    public void putControlAssistencia(final ICallBackaActivityGetString activitatQueCrida, final String idImpartir, final String dadesJSON) throws UserNotFoundException {
+        existeixUsuari();
         String urlCrida = url + "/putControlAssistencia/" + idImpartir + "/" + username + "/";
         executaEnviarEnBackground(activitatQueCrida, CALLER_putControlAssistencia, urlCrida, dadesJSON);
     }

@@ -12,6 +12,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.Toast;
 
+import cat.institutmontilivi.djau.Exceptions.UserNotFoundException;
 import cat.institutmontilivi.djau.R;
 
 import org.json.JSONArray;
@@ -69,14 +70,25 @@ public class GuardiaActivity extends Activity implements PresenciaWebService.ICa
                 Log.e("DEBUG", "CREANT HORA GUARDIA" + profeSeleccionat);
                 String username = prefs.getString("username", "");
                 //putGuardia(final ICallBackaActivityGetString activitatQueCrida, final String idUsuariASubstituir, final String idUsuari, final String idFranja, final Date diaAImpartir)
-                pws.putGuardia((PresenciaWebService.ICallBackaActivityGetString)v.getContext(),
-                        profeSeleccionat.username, prefs.getString("username", ""), franjaSeleccionada.pk, dataGuardia);
+                try {
+                    pws.putGuardia((PresenciaWebService.ICallBackaActivityGetString)v.getContext(),
+                            profeSeleccionat.username, prefs.getString("username", ""), franjaSeleccionada.pk, dataGuardia);
+                } catch (UserNotFoundException e) {
+                    e.printStackTrace();
+
+                }
 
             }
         });
 
-        pws.getProfes(this);
-        pws.getFrangesHoraries(this);
+        try {
+            pws.getProfes(this);
+            pws.getFrangesHoraries(this);
+        } catch (UserNotFoundException e) {
+            e.printStackTrace();
+            Utils.mostraMissatgeToast(getApplicationContext(), e.getMessage());
+        }
+
     }
 
     @Override

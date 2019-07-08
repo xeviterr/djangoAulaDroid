@@ -1,8 +1,11 @@
 package cat.institutmontilivi.djau;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -14,10 +17,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
-import cat.institutmontilivi.djau.R;
+import cat.institutmontilivi.djau.Exceptions.UserNotFoundException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,8 +40,8 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
 
     HttpPersistentConnection conn = new HttpPersistentConnection();
     PresenciaWebService pws = null;
-    //Date dataAVisualitzar = new GregorianCalendar(2018, Calendar.DECEMBER, 31).getTime();
-    Date dataAVisualitzar = new GregorianCalendar().getTime();
+    //Date dataAVisualitzar = new GregorianCalendar(2019, Calendar.MAY, 27).getTime();
+    Date dataAVisualitzar =  new GregorianCalendar().getTime();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,17 +67,29 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         setContentView(R.layout.activity_horari_dia);
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         setTitle(sdf.format(dataAVisualitzar));
+    }
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        pws = new PresenciaWebService(
-                conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
+    @Override
+    protected void onStart() {
+        super.onStart();
+        doLogin();
     }
 
     protected void doLogin()
     {
         //Abans de fer login comprovem que el nivell de API sigui l'adient a aquesta aplicació.
         //Quan tornem el resultat de la API fem login.
-        pws.getAPILevel(this);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        pws = new PresenciaWebService(
+                conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
+
+        try {
+            pws.getAPILevel(this);
+        } catch (UserNotFoundException e) {
+            e.printStackTrace();
+            Utils.mostraMissatgeToast(getApplicationContext(),
+                    "Error, no hi ha usuari configurat, accedeix a configuració i indica el teu usuari." + e.getMessage());
+        }
     }
 
     @Override
@@ -87,7 +102,7 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         switch (item.getItemId()) {
             case R.id.configuracio:
                 Log.e("DEBUG", "click a configuració");
@@ -99,15 +114,60 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
                 return true;
             case R.id.anteriorDia:
                 Log.e("DEBUG", "click a dia anterior");
-                dataAVisualitzar = canviarData(-1);
-                pws.getImpartirPerData(this, sdf.format(dataAVisualitzar));
+                dataAVisualitzar = Utils.sumaORestaDiesAData(dataAVisualitzar, -1);
+                setTitle(sdf.format(dataAVisualitzar));
+                try {
+                    pws.getImpartirPerData(this, sdf.format(dataAVisualitzar));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Utils.mostraMissatgeToast(getApplicationContext(), e.getMessage());
+                }
                 return true;
             case R.id.seguentDia:
                 Log.e("DEBUG", "click a dia següent");
-                dataAVisualitzar = canviarData(1);
-                pws.getImpartirPerData(this, sdf.format(dataAVisualitzar));
+                dataAVisualitzar = Utils.sumaORestaDiesAData(dataAVisualitzar, 1);
+                setTitle(sdf.format(dataAVisualitzar));
+                try {
+                    pws.getImpartirPerData(this, sdf.format(dataAVisualitzar));
+                } catch (UserNotFoundException e) {
+                    e.printStackTrace();
+                    Utils.mostraMissatgeToast(getApplicationContext(), e.getMessage());
+                }
                 return true;
-            default:
+            case R.id.saltarADia:
+                Log.e("DEBUG", "click a saltarADia");
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(dataAVisualitzar);
+
+                DatePickerDialog datePickerDialog = new DatePickerDialog(
+                        this, new DatePickerDialog.OnDateSetListener() {
+                            @Override
+                            public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                                Calendar calr = Calendar.getInstance();
+                                calr.set(year, monthOfYear, dayOfMonth);
+                                Log.e("DEBUG" ," data seleccionada:" + calr.getTime());
+                                dataAVisualitzar = calr.getTime();
+                                String dAImprimir = sdf.format(dataAVisualitzar);
+                                setTitle(dAImprimir);
+                                try {
+                                    pws.getImpartirPerData(HorariDiaActivity.this, dAImprimir);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    Utils.mostraMissatgeToast(getApplicationContext(), e.getMessage());
+                                }
+                            }
+                        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+
+                datePickerDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        dialog.dismiss();
+                    }
+                });
+                //datePickerDialog.updateDate(dataAVisualitzar.getYear(), dataAVisualitzar.getMonth(), dataAVisualitzar.getDay());
+                datePickerDialog.show();
+                return true;
+             default:
                 return super.onOptionsItemSelected(item);
         }
     }
@@ -118,11 +178,6 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         setTitle(sdf.format(data));
         return data;
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
     }
 
     private void loadControls(JSONArray dades) throws JSONException {
@@ -152,7 +207,7 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
             }
             else {
                 if (campsImpartir.getString("professor_guardia") != "null") {
-                    Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_vermell, null);
+                    Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_blau, null);
                     b.setBackgroundDrawable(drw);
                     b.setText("G:" + b.getText());
                 } else {
@@ -160,6 +215,7 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
                     b.setBackgroundDrawable(drw);
                 }
             }
+            b.setTextColor(Color.BLACK);
             mainLayout.addView(b);
         }
 
@@ -206,14 +262,13 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
             if (error)
             {
                 String msg = "";
+                if (callerID == PresenciaWebService.CALLER_getAPILevel)
+                    msg = "No s'ha pogut accedir al servei Web, comprova la configuració.";
                 if (callerID == PresenciaWebService.CALLER_doLogin)
-                    msg = "No s'ha pogut fer login, canvia la configuració i intenta reconnectar";
+                    msg = "No s'ha pogut fer login, canvia el nom d'usuari i el password.";
                 else
                     msg = errorMsg.toString();
-                Toast toast = Toast.makeText(getApplicationContext(),
-                        msg,
-                        Toast.LENGTH_LONG);
-                toast.show();
+                Utils.mostraMissatgeToast(getApplicationContext(), msg);
             }
             else {
                 if (callerID == PresenciaWebService.CALLER_getAPILevel) {
@@ -256,7 +311,12 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
     protected void recarregarHorarisDiaActual()
     {
         //Recarrega les dades.
-        pws.getImpartirPerData(this, new SimpleDateFormat("yyyy-MM-dd").format(dataAVisualitzar));
+        try {
+            pws.getImpartirPerData(this, new SimpleDateFormat("yyyy-MM-dd").format(dataAVisualitzar));
+        } catch (UserNotFoundException e) {
+            e.printStackTrace();
+            Utils.mostraMissatgeToast(getApplicationContext(), e.getMessage());
+        }
     }
 
     @Override
@@ -265,5 +325,4 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         outState.putSerializable(SAVED_CONN, this.conn);
         outState.putSerializable(SAVED_DATAAVISUALITZAR, dataAVisualitzar);
     }
-
 }
