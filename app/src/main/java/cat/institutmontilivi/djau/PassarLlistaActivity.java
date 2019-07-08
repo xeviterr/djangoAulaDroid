@@ -24,8 +24,9 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
 {
     String pkImpartir = "";
     ArrayList<AssistenciaView> vistesAssistencia = new ArrayList<AssistenciaView>();
-    PresenciaWebService pws = null;
     Map<String, Integer> estatsControlAssistencia = new HashMap<String, Integer>();
+
+    PresenciaWebService pws = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,10 +38,10 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
             if (conn == null)
                 throw new Exception("Error no han passat la connexió, és necessària. (CONN)");
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
             pws = new PresenciaWebService(conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
             pws.getEstatControlAssistencia(this);
             pws.getControlAssistencia(this, this.pkImpartir);
-            //pws.getImpartirPerData(this, "2019-01-28");
 
             Button button = (Button) findViewById(R.id.btnEnviar);
             button.setOnClickListener(this);

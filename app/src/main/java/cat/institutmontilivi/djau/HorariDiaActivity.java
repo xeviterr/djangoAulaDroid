@@ -32,6 +32,9 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
     private static final int CODI_ACTIVITAT_GUARDIA = 1;
     private static final int CODI_ACTIVITAT_PASSAR_LLISTA = 2;
 
+    private final String SAVED_CONN = "httpconnection";
+    private final String SAVED_DATAAVISUALITZAR = "dataavisualitzar";
+
     HttpPersistentConnection conn = new HttpPersistentConnection();
     PresenciaWebService pws = null;
     //Date dataAVisualitzar = new GregorianCalendar(2018, Calendar.DECEMBER, 31).getTime();
@@ -40,18 +43,37 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState !=null) {
+            this.conn = (HttpPersistentConnection) savedInstanceState.getSerializable(SAVED_CONN);
+            this.dataAVisualitzar = (Date) savedInstanceState.getSerializable(SAVED_DATAAVISUALITZAR);
+
+            //No cal fer login quan giren la pantalla.
+            inicialitza();
+            recarregarHorarisDiaActual();
+        }
+        else
+        {
+            inicialitza();
+            doLogin();
+        }
+    }
+
+    protected void inicialitza()
+    {
         setContentView(R.layout.activity_horari_dia);
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         setTitle(sdf.format(dataAVisualitzar));
-        doLogin();
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        pws = new PresenciaWebService(
+                conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
     }
 
     protected void doLogin()
     {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        pws = new PresenciaWebService(
-                conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
-
+        //Abans de fer login comprovem que el nivell de API sigui l'adient a aquesta aplicació.
+        //Quan tornem el resultat de la API fem login.
         pws.getAPILevel(this);
     }
 
@@ -77,17 +99,25 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
                 return true;
             case R.id.anteriorDia:
                 Log.e("DEBUG", "click a dia anterior");
-                dataAVisualitzar = Utils.sumaORestaDiesAData(dataAVisualitzar, -1);
+                dataAVisualitzar = canviarData(-1);
                 pws.getImpartirPerData(this, sdf.format(dataAVisualitzar));
                 return true;
             case R.id.seguentDia:
                 Log.e("DEBUG", "click a dia següent");
-                dataAVisualitzar = Utils.sumaORestaDiesAData(dataAVisualitzar, 1);
+                dataAVisualitzar = canviarData(1);
                 pws.getImpartirPerData(this, sdf.format(dataAVisualitzar));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private Date canviarData(int nDies)
+    {
+        Date data = Utils.sumaORestaDiesAData(dataAVisualitzar, nDies);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        setTitle(sdf.format(data));
+        return data;
     }
 
     @Override
@@ -196,7 +226,6 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
                 if (callerID == PresenciaWebService.CALLER_doLogin) {
 
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                    //pws.getImpartirPerData(this, sdf.format(dataAVisualitzar));
                     pws.getImpartirPerData(this, sdf.format(dataAVisualitzar));
                 }
                 if (callerID == PresenciaWebService.CALLER_getImpartirPerData) {
@@ -221,8 +250,20 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
+        recarregarHorarisDiaActual();
+    }
+
+    protected void recarregarHorarisDiaActual()
+    {
         //Recarrega les dades.
         pws.getImpartirPerData(this, new SimpleDateFormat("yyyy-MM-dd").format(dataAVisualitzar));
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(SAVED_CONN, this.conn);
+        outState.putSerializable(SAVED_DATAAVISUALITZAR, dataAVisualitzar);
     }
 
 }
