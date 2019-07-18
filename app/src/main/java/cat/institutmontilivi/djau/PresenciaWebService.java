@@ -193,7 +193,6 @@ public class PresenciaWebService {
                     err = new HttpError(e.getMessage(), "0");
                 }
 
-
                 //Crida el callback amb el thread principal.
                 activitatQueCrida.runOnUiThread(new Runnable() {
                     @Override

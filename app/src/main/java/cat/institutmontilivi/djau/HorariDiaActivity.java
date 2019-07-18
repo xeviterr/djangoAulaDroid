@@ -170,12 +170,19 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
             b.setText(impartir.getString("assignatura") + "\n" +
                     horaInici);
             JSONObject campsImpartir = impartir.getJSONObject("impartir").getJSONObject("fields");
-            if (campsImpartir.getString("dia_passa_llista") == "null") {
-                Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_gris, null);
-                b.setBackgroundDrawable(drw);
+            if (campsImpartir.getString("dia_passa_llista").equals("null")) {
+                if (!campsImpartir.getString("professor_guardia").equals("null")) {
+                    Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_blau, null);
+                    b.setBackgroundDrawable(drw);
+                    b.setText("G:" + b.getText());
+                }
+                else {
+                    Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_gris, null);
+                    b.setBackgroundDrawable(drw);
+                }
             }
             else {
-                if (campsImpartir.getString("professor_guardia") != "null") {
+                if (!campsImpartir.getString("professor_guardia").equals("null")) {
                     Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_blau, null);
                     b.setBackgroundDrawable(drw);
                     b.setText("G:" + b.getText());
