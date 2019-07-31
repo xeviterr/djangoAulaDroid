@@ -1,7 +1,6 @@
 package cat.institutmontilivi.djau;
 
 import android.os.Build;
-import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -12,14 +11,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 import javax.net.ssl.HostnameVerifier;
@@ -29,44 +25,20 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-public class HttpPersistentConnection implements Serializable {
+public class HttpConnection implements Serializable {
     /**
      * Connexió que autentica l'usuari amb una cookie.
      */
     public int CONN_TIMEOUT = 10000;
     public int READ_TIMEOUT = 10000;
-    public String METHOD_POST = "POST";
     public boolean API_DEBUG = true; //Accepta qualsevol HTTP, perillós.
+    private String token = "";
 
-    SerializableCookieManager msCookieManager = new SerializableCookieManager();
-
-    public HttpPersistentConnection()
+    public HttpConnection()
     {
         //Obtenir si és DEBUG de la configuració de l'Aplicació.
         this.API_DEBUG = Configuration.getInstance().APIDebug;
     }
-
-    private void getAndSaveCookiesToManager(HttpURLConnection connection)
-    {
-        Map<String, List<String>> headerFields = connection.getHeaderFields();
-        List<String> cookiesHeader = headerFields.get("Set-Cookie");
-
-        if (cookiesHeader != null) {
-            for (String cookie : cookiesHeader) {
-                msCookieManager.getCookieStore().add(null, HttpCookie.parse(cookie).get(0));
-            }
-        }
-    }
-
-    private void setCookiesToConnection(HttpURLConnection connection)
-    {
-        if (msCookieManager.getCookieStore().getCookies().size() > 0) {
-            // While joining the Cookies, use ',' or ';' as needed. Most of the servers are using ';'
-            connection.setRequestProperty("Cookie",
-                    TextUtils.join(";", msCookieManager.getCookieStore().getCookies()));
-        }
-    }
-
     public String requestWebService(String serviceUrl) throws HttpErrorException, IOException, NoSuchAlgorithmException {
         disableConnectionReuseIfNecessary();
 
@@ -75,13 +47,12 @@ public class HttpPersistentConnection implements Serializable {
             // create connection
             Log.e("ERROR", "WebService URL:" + serviceUrl);
             urlConnection = obrirConnexioHTTPoHTTPS(serviceUrl);
-            //urlConnection.setRequestProperty("Authorization", Constants.BASIC_AUTH);
+            if (getToken() !="")
+                urlConnection.setRequestProperty ("Authorization", "Token " + getToken());
             urlConnection.setConnectTimeout(CONN_TIMEOUT);
             urlConnection.setReadTimeout(READ_TIMEOUT);
-            setCookiesToConnection(urlConnection);
             urlConnection.connect();
 
-            getAndSaveCookiesToManager(urlConnection);
             String response = rebreResposta(urlConnection);
             Log.e("HTTP", response);
             return response;
@@ -153,9 +124,10 @@ public class HttpPersistentConnection implements Serializable {
         HttpURLConnection connection = null;
         try {
             connection = obrirConnexioHTTPoHTTPS(urlString);
+            if (getToken() !="")
+                connection.setRequestProperty("Authorization", "Token " + getToken());
             connection.setRequestMethod(method);
             connection.setDoOutput(true);
-            setCookiesToConnection(connection);
 
             DataOutputStream dStream = new DataOutputStream(connection.getOutputStream());
             Log.e("DEBUG","Post strings:" + data);
@@ -164,7 +136,6 @@ public class HttpPersistentConnection implements Serializable {
             dStream.close();
             connection.connect();
 
-            getAndSaveCookiesToManager(connection);
             String response = rebreResposta(connection);
             Log.e("HTTP", response);
             return response;
@@ -250,4 +221,11 @@ public class HttpPersistentConnection implements Serializable {
         }
     }
 
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
 }

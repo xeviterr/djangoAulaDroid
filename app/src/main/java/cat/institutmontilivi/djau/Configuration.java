@@ -4,7 +4,7 @@ public class Configuration
 {
     private static Configuration instance;
 
-    public String APILevel="1";
+    public String APILevel="2";
     public boolean APIDebug=true;
 
     public static Configuration getInstance()

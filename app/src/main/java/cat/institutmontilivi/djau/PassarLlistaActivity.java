@@ -33,7 +33,7 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
         super.onCreate(savedInstanceState);
         try {
             setContentView(R.layout.activity_passar_llista);
-            HttpPersistentConnection conn = (HttpPersistentConnection) getIntent().getSerializableExtra("CONN");
+            HttpConnection conn = (HttpConnection) getIntent().getSerializableExtra("CONN");
             this.pkImpartir = getIntent().getStringExtra("PKIMPARTIR");
             if (conn == null)
                 throw new Exception("Error no han passat la connexió, és necessària. (CONN)");
@@ -77,13 +77,11 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
                         throw new Exception("Cal obtenir els Estats dels controls d'assistència per passar llista.");
                     JSONArray assistencies = new JSONArray(data);
                     for (int i = 0; i < assistencies.length(); i++) {
-                        JSONObject camps = assistencies.getJSONObject(i).getJSONObject("ca").getJSONObject("fields");
-                        JSONObject campsAlumne = assistencies.getJSONObject(i).getJSONObject("alumne").getJSONObject("fields");
-                        String alumne = campsAlumne.getString("nom") + " " + campsAlumne.getString("cognoms");
+                        JSONObject camps = assistencies.getJSONObject(i);
+                        String alumne = camps.getString("nomAlumne") + " " + camps.getString("cognomsAlumne");
                         int estatAnterior = -1;
-                        if (!assistencies.getJSONObject(i).isNull("estatHoraAnterior"))
-                        {
-                            estatAnterior = assistencies.getJSONObject(i).getInt("estatHoraAnterior");
+                        if (!camps.isNull("estatHoraAnterior")){
+                            estatAnterior = camps.getInt("estatHoraAnterior");
                         }
                         Log.e("DEBUG , hora anterior:", String.valueOf(estatAnterior));
                         int estat = -1;
@@ -97,7 +95,7 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
                         ScrollView sv = this.findViewById(R.id.scroll);
                         LinearLayout ll = sv.findViewById(R.id.mainLayout);
                         AssistenciaView assistenciaView = new AssistenciaView(this, this, this.estatsControlAssistencia);
-                        assistenciaView.setTag(assistencies.getJSONObject(i).getJSONObject("ca").getString("pk"));
+                        assistenciaView.setTag(camps.getString("id"));
                         assistenciaView.setEstatActual(estat);
                         assistenciaView.setEstatHoraAnterior(estatAnterior);
                         vistesAssistencia.add(assistenciaView);
@@ -110,11 +108,11 @@ public class PassarLlistaActivity extends Activity implements PresenciaWebServic
                         ll.addView(assistenciaView);
                         ll.addView(linia);
                     }
-                } else if (callerID == PresenciaWebService.CALLER_getEstatControlAssistencia) {
+                } else if (callerID == PresenciaWebService.CALLER_getEstatsControlAssistencia) {
                     JSONArray estats = new JSONArray(data);
                     for (int i = 0; i < estats.length(); i++) {
-                        JSONObject camps = estats.getJSONObject(i).getJSONObject("fields");
-                        estatsControlAssistencia.put(camps.getString("codi_estat"), estats.getJSONObject(i).getInt("pk"));
+                        JSONObject camps = estats.getJSONObject(i);
+                        estatsControlAssistencia.put(camps.getString("codi_estat"), estats.getJSONObject(i).getInt("id"));
                     }
                 } else if (callerID == PresenciaWebService.CALLER_putControlAssistencia)
                 {

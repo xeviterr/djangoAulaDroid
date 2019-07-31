@@ -13,9 +13,9 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import cat.institutmontilivi.djau.Exceptions.UserNotFoundException;
-import cat.institutmontilivi.djau.R;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,7 +28,7 @@ public class GuardiaActivity extends Activity implements PresenciaWebService.ICa
 
     class Franja
     {
-        public String pk;
+        public String id;
         public String nom;
 
         @Override
@@ -54,7 +54,7 @@ public class GuardiaActivity extends Activity implements PresenciaWebService.ICa
         setContentView(R.layout.activity_guardia);
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        HttpPersistentConnection conn = (HttpPersistentConnection) getIntent().getSerializableExtra("CONN");
+        HttpConnection conn = (HttpConnection) getIntent().getSerializableExtra("CONN");
         final Date dataGuardia = (Date)getIntent().getSerializableExtra("DATA_A_VISUALITZAR");
 
         pws = new PresenciaWebService(conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
@@ -72,7 +72,10 @@ public class GuardiaActivity extends Activity implements PresenciaWebService.ICa
                 //putGuardia(final ICallBackaActivityGetString activitatQueCrida, final String idUsuariASubstituir, final String idUsuari, final String idFranja, final Date diaAImpartir)
                 try {
                     pws.putGuardia((PresenciaWebService.ICallBackaActivityGetString)v.getContext(),
-                            profeSeleccionat.username, prefs.getString("username", ""), franjaSeleccionada.pk, dataGuardia);
+                            profeSeleccionat.username,
+                            prefs.getString("username", ""),
+                            franjaSeleccionada.id,
+                            dataGuardia);
                 } catch (UserNotFoundException e) {
                     e.printStackTrace();
 
@@ -100,9 +103,10 @@ public class GuardiaActivity extends Activity implements PresenciaWebService.ICa
                 JSONArray franges = new JSONArray(data);
                 ArrayList<Franja> listdata = new ArrayList<Franja>();
                 for (int i=0;i<franges.length();i++){
+                    JSONObject json = franges.getJSONObject(i);
                     Franja f = new Franja();
-                    f.pk = franges.getJSONObject(i).getString("pk");
-                    f.nom = franges.getJSONObject(i).getJSONObject("fields").getString("hora_inici") + " - " + franges.getJSONObject(i).getJSONObject("fields").getString("hora_fi");
+                    f.id = json.getString("id");
+                    f.nom = json.getString("hora_inici") + " - " + json.getString("hora_fi");
                     listdata.add(f);
                     Log.e("DEBUG", listdata.toString());
                 }
@@ -122,9 +126,10 @@ public class GuardiaActivity extends Activity implements PresenciaWebService.ICa
                 JSONArray profes = new JSONArray(data);
                 ArrayList<Professor> listdata = new ArrayList<Professor>();
                 for (int i=0;i<profes.length();i++){
+                    JSONObject json = profes.getJSONObject(i);
                     Professor p = new Professor();
-                    p.username = profes.getJSONObject(i).getJSONObject("fields").getString("username");
-                    p.nom = profes.getJSONObject(i).getJSONObject("fields").getString("username");
+                    p.username = json.getString("username");
+                    p.nom = json.getString("username");
                     listdata.add(p);
                     Log.e("DEBUG", listdata.toString());
                 }
@@ -155,21 +160,6 @@ public class GuardiaActivity extends Activity implements PresenciaWebService.ICa
         {
             e.printStackTrace();
         }
-
-
     }
-
-    /*
-
-        final String[] COUNTRIES = new String[] {
-                "Belgium", "France", "Italy", "Germany", "Spain"
-        };
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_dropdown_item_1line, COUNTRIES);
-        AutoCompleteTextView textView = (AutoCompleteTextView) findViewById(R.id.AutocompleteProfe);
-        textView.setAdapter(adapter);
-
-     */
 
 }

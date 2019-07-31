@@ -38,7 +38,7 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
     private final String SAVED_CONN = "httpconnection";
     private final String SAVED_DATAAVISUALITZAR = "dataavisualitzar";
 
-    HttpPersistentConnection conn = new HttpPersistentConnection();
+    HttpConnection conn = new HttpConnection();
     PresenciaWebService pws = null;
     //Date dataAVisualitzar = new GregorianCalendar(2019, Calendar.MAY, 27).getTime();
     Date dataAVisualitzar =  new GregorianCalendar().getTime();
@@ -48,7 +48,7 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState !=null) {
-            this.conn = (HttpPersistentConnection) savedInstanceState.getSerializable(SAVED_CONN);
+            this.conn = (HttpConnection) savedInstanceState.getSerializable(SAVED_CONN);
             this.dataAVisualitzar = (Date) savedInstanceState.getSerializable(SAVED_DATAAVISUALITZAR);
 
             //No cal fer login quan giren la pantalla.
@@ -67,6 +67,10 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
         setContentView(R.layout.activity_horari_dia);
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         setTitle(sdf.format(dataAVisualitzar));
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        pws = new PresenciaWebService(
+                conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
     }
 
     @Override
@@ -78,17 +82,12 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
     protected void doLogin()
     {
         //Abans de fer login comprovem que el nivell de API sigui l'adient a aquesta aplicació.
-        //Quan tornem el resultat de la API fem login.
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        pws = new PresenciaWebService(
-                conn, prefs.getString("server_url", ""),prefs.getString("username", ""));
-
+        //Quan tornem el resultat de la API fem login (veure funció returnData dins aquesta mateixa Activity).
         try {
             pws.getAPILevel(this);
         } catch (UserNotFoundException e) {
             e.printStackTrace();
-            Utils.mostraMissatgeToast(getApplicationContext(),
-                    "Error, no hi ha usuari configurat, accedeix a configuració i indica el teu usuari." + e.getMessage());
+            Utils.mostraMissatgeToast(getApplicationContext(), e.getMessage());
         }
     }
 
@@ -192,17 +191,17 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT));
             b.setOnClickListener(this);
-            b.setTag(impartir.getJSONObject("impartir").getString("pk"));
+            b.setTag(impartir.getString("id"));
+            JSONObject horari = impartir.getJSONObject("horari");
             //Treure els dos últims zeros dels segons..
-            String horaInici = impartir.getJSONObject("horari").getJSONObject("fields").getString("hora_inici");
+            String horaInici = horari.getJSONObject("hora").getString("hora_inici");
             if (horaInici.length() > 5)
                 horaInici = horaInici.substring(0, 5);
 
-            b.setText(impartir.getString("assignatura") + "\n" +
+            b.setText(horari.getJSONObject("assignatura").getString("nom_assignatura") + "\n" +
                     horaInici);
-            JSONObject campsImpartir = impartir.getJSONObject("impartir").getJSONObject("fields");
-            if (campsImpartir.getString("dia_passa_llista").equals("null")) {
-                if (!campsImpartir.getString("professor_guardia").equals("null")) {
+            if (impartir.getString("dia_passa_llista").equals("null")) {
+                if (!impartir.getString("professor_guardia").equals("null")) {
                     Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_blau, null);
                     b.setBackgroundDrawable(drw);
                     b.setText("G:" + b.getText());
@@ -213,7 +212,7 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
                 }
             }
             else {
-                if (!campsImpartir.getString("professor_guardia").equals("null")) {
+                if (!impartir.getString("professor_guardia").equals("null")) {
                     Drawable drw = ResourcesCompat.getDrawable(getResources(), R.drawable.boto_blau, null);
                     b.setBackgroundDrawable(drw);
                     b.setText("G:" + b.getText());
@@ -270,8 +269,8 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
             {
                 String msg = "";
                 if (callerID == PresenciaWebService.CALLER_getAPILevel)
-                    msg = "No s'ha pogut accedir al servei Web, comprova la configuració.";
-                if (callerID == PresenciaWebService.CALLER_doLogin)
+                    msg = "No s'ha pogut accedir al servei Web, comprova la URL del WebService.";
+                else if (callerID == PresenciaWebService.CALLER_doLogin)
                     msg = "No s'ha pogut fer login, canvia el nom d'usuari i el password.";
                 else
                     msg = errorMsg.toString();
@@ -285,14 +284,13 @@ public class HorariDiaActivity extends Activity implements View.OnClickListener,
 
                     pws.doLogin(this, prefs.getString("password", ""));
                 }
-                if (callerID == PresenciaWebService.CALLER_doLogin) {
+                else if (callerID == PresenciaWebService.CALLER_doLogin) {
 
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                     pws.getImpartirPerData(this, sdf.format(dataAVisualitzar));
                 }
-                if (callerID == PresenciaWebService.CALLER_getImpartirPerData) {
-                    Log.e("OBTINGUT EL PK", new JSONArray(data).getJSONObject(0)
-                            .getJSONObject("impartir").getString("pk"));
+                else if (callerID == PresenciaWebService.CALLER_getImpartirPerData) {
+                    Log.e("OBTINGUT EL PK", new JSONArray(data).getJSONObject(0).getString("id"));
 
                     loadControls(new JSONArray(data));
                 }
